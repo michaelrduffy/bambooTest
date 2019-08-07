@@ -3,9 +3,9 @@ var express = require('express')
 var path = require('path')
 var cookieParser = require('cookie-parser')
 var logger = require('morgan')
-
+var randomBytes = require('random-bytes')
 var session = require('express-session')
-var SHA512 = require("crypto-js/sha512")
+var crypto = require('crypto-js')
 
 var app = express()
 var helmet = require('helmet')
@@ -42,13 +42,36 @@ app.get('/', (req, res, next) => {
   }
 })
 
+app.post('/createAccount', (req, res) => {
+  let username = req.body.username
+  let hash = req.body.hash
+  let salt = randomBytes.sync(32).toString()
+  hash = crypto.SHA512(salt + hash).toString()
+  console.log(hash)
+  MongoClient.connect(mongoUrl, (err, client) => {
+    if (err) {
+      throw err
+    } else {
+      const db = client.db(dbName)
+      db.collection('users').insertOne({ username: username, salt: salt, hash: hash }, (err, response) => {
+        if (err) {
+          throw err
+        } else {
+          console.log(response)
+          client.close()
+          res.send('Account Created')
+        }
+      })
+    }
+  })
+})
+
 app.post('/signIn', (req, res) => {
   console.log(req)
-  MongoClient.connect(mongoUrl, function (err, client) {
+  MongoClient.connect(mongoUrl, (err, client) => {
     if (err) {
       res.send('ERR')
     } else {
-      console.log('Connected successfully to server')
       const db = client.db(dbName)
       client.close()
       req.session.signedIn = true
