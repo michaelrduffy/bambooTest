@@ -7,12 +7,9 @@ var logger = require('morgan')
 var session = require('express-session')
 var SHA512 = require("crypto-js/sha512")
 
-
 var app = express()
 var helmet = require('helmet')
 app.use(helmet())
-
-
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'))
@@ -35,8 +32,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 /* GET home page. */
 app.get('/', function (req, res, next) {
   if (!req.session.signedIn) {
-    req.session.signedIn = true
-    res.render('index', { title: 'Not Signed In' })
+    res.render('signIn', { title: 'Not Signed In' })
   } else {
     res.render('index', { title: 'Express' })
   }
