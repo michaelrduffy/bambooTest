@@ -72,6 +72,7 @@ app.post('/send', (req, res) => {
   let id = req.session.userid
   let recipient = req.body.recipient
   let amount = parseInt(req.body.amount)
+  console.log(id)
 
   MongoClient.connect(mongoUrl, (err, client) => {
     if (err) {
@@ -84,17 +85,17 @@ app.post('/send', (req, res) => {
         } else {
           if (result.length > 0) {
             let data = result[0]
-            db.collection('users').updateOne({ _id: data['_id'] }, { $set: { bambeuros: parseInt(data.bambeuros) + amount } }).catch((err) => {
-              console.log(err)
-            }).then(
-              db.collection('users').updateOne({ _id: id }, { $set: { bambeuros: parseInt(req.session.bambeuros) - amount } }).catch((err) => {
-                console.log(err)
-              }).then(
-                console.log('Transfer Successful')
-              )
-            )
+            console.log(data['_id'])
+            db.collection('users').updateOne({ _id: data['_id'] }, { $set: { bambeuros: (parseInt(data.bambeuros) + amount) } }, (err, response) => {
+              if (err) throw err
+            })
+            let newAmount = (parseInt(req.session.bambeuros) - amount)
+            console.log(newAmount)
+            db.collection('users').updateOne({ username: req.session.username }, { $set: { bambeuros: newAmount } }, (err, response) => {
+              if (err) throw err
+              //console.log(response)
+            })
           }
-          client.close()
         }
       })
     }
