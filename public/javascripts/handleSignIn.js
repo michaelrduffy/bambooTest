@@ -5,7 +5,11 @@ $($(document).ready(() => {
     let hash = sha512(password)
     let data = { username: username, hash: hash }
     $.post('/signIn', data, (res) => {
-      location.reload()
+      if (res === 'ERR') {
+        alert(res)
+      } else {
+        location.reload()
+      }
     })
   })
 }))

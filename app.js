@@ -11,6 +11,10 @@ var app = express()
 var helmet = require('helmet')
 app.use(helmet())
 
+var MongoClient = require('mongodb').MongoClient
+var mongoUrl = 'mongodb://localhost:27017'
+var dbName = 'bambooDB'
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'pug')
@@ -40,8 +44,17 @@ app.get('/', (req, res, next) => {
 
 app.post('/signIn', (req, res) => {
   console.log(req)
-  req.session.signedIn = true
-  res.send('signed In')
+  MongoClient.connect(mongoUrl, function (err, client) {
+    if (err) {
+      res.send('ERR')
+    } else {
+      console.log('Connected successfully to server')
+      const db = client.db(dbName)
+      client.close()
+      req.session.signedIn = true
+      res.send('signed In')
+    }
+  })
 })
 
 // catch 404 and forward to error handler
