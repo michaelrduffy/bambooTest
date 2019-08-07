@@ -38,7 +38,23 @@ app.get('/', (req, res, next) => {
   if (!req.session.signedIn) {
     res.render('signIn', { title: 'Not Signed In' })
   } else {
-    res.render('index', { title: 'Express' })
+    let id = req.session.id
+    let username = req.session.username
+    MongoClient.connect(mongoUrl, (err, client) => {
+      if (err) {
+        throw err
+      } else {
+        const db = client.db(dbName)
+        db.collection('users').find({ username: username }).toArray((err, result) => {
+          if (err) {
+            throw err
+          } else {
+            let bambeuros = result[0].bambeuros
+            res.render('index', { title: 'Express', username: username, bambeuros: bambeuros })
+          }
+        })
+      }
+    })
   }
 })
 
@@ -53,7 +69,7 @@ app.post('/createAccount', (req, res) => {
       throw err
     } else {
       const db = client.db(dbName)
-      db.collection('users').insertOne({ username: username, salt: salt, hash: hash }, (err, response) => {
+      db.collection('users').insertOne({ username: username, salt: salt, hash: hash, bambeuros: 100 }, (err, response) => {
         if (err) {
           throw err
         } else {
@@ -86,7 +102,8 @@ app.post('/signIn', (req, res) => {
             if (crypto.SHA512(salt + hash).toString() === data.hash) {
               console.log('SIGNED IN')
               req.session.signedIn = true
-              req.session.user = data['_id']
+              req.session.id = data['_id']
+              req.session.username = data.username
               res.send('signed In')
             } else {
               res.send('ERR')
