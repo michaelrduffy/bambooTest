@@ -6,8 +6,23 @@ block content
       h1= username
     div(class='row')
       div(class='col-md-2')
-      div(class='col-auto')
-        div(class='container')
+      div(class='col-md-8')
+        div(class='container-fluid card')
           div(class='row')
-            h3 Current Balance: #{bambeuros}
+            div(class='col')
+              br
+              h3 Current Balance: #{bambeuros}
+          div(class='row')
+            div(class='col')
+              hr
+              br
+              br
+              p Send BambEuros:
+              input(id='sendUsername', type='text' placeholder='Recipient Name')
+              input(id='sendAmount', type='number' placeholder='Amount to Send')
+              hr
+              br
+              button(class='btn btn-primary' id='sendButton') Send BambEuros
+              br
+              br
       div(class='col-md-2')
