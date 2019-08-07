@@ -68,14 +68,36 @@ app.post('/createAccount', (req, res) => {
 
 app.post('/signIn', (req, res) => {
   console.log(req)
+  let username = req.body.username
+  let hash = req.body.hash
   MongoClient.connect(mongoUrl, (err, client) => {
     if (err) {
       res.send('ERR')
     } else {
       const db = client.db(dbName)
+      db.collection('users').find({ username: username }).toArray((err, result) => {
+        if (err) {
+          throw err
+        } else {
+          if (result.length > 0) {
+            let data = result[0]
+            let salt = data.salt
+            console.log(salt)
+            if (crypto.SHA512(salt + hash).toString() === data.hash) {
+              console.log('SIGNED IN')
+              req.session.signedIn = true
+              req.session.user = data['_id']
+              res.send('signed In')
+            } else {
+              res.send('ERR')
+            }
+          }
+        }
+      })
       client.close()
-      req.session.signedIn = true
-      res.send('signed In')
+      if (req.session.signedIn) {
+        res.send('signed In')
+      }
     }
   })
 })
