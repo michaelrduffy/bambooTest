@@ -40,6 +40,8 @@ app.get('/', (req, res, next) => {
 
 app.post('/signIn', (req, res) => {
   console.log(req)
+  req.session.signedIn = true
+  res.send('signed In')
 })
 
 // catch 404 and forward to error handler
