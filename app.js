@@ -38,7 +38,7 @@ app.get('/', (req, res, next) => {
   if (!req.session.signedIn) {
     res.render('signIn', { title: 'Not Signed In' })
   } else {
-    let id = req.session.id
+    let id = req.session.userid
     let username = req.session.username
     MongoClient.connect(mongoUrl, (err, client) => {
       if (err) {
@@ -50,12 +50,55 @@ app.get('/', (req, res, next) => {
             throw err
           } else {
             let bambeuros = result[0].bambeuros
+            req.session.bambeuros = bambeuros
             res.render('index', { title: 'Express', username: username, bambeuros: bambeuros })
           }
         })
       }
     })
   }
+})
+
+app.get('/signOut', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      throw err
+    }
+  })
+  res.send('signed out')
+})
+
+app.post('/send', (req, res) => {
+  let id = req.session.userid
+  let recipient = req.body.recipient
+  let amount = parseInt(req.body.amount)
+
+  MongoClient.connect(mongoUrl, (err, client) => {
+    if (err) {
+      res.send('ERR')
+    } else {
+      const db = client.db(dbName)
+      db.collection('users').find({ username: recipient }).toArray((err, result) => {
+        if (err) {
+          throw err
+        } else {
+          if (result.length > 0) {
+            let data = result[0]
+            db.collection('users').updateOne({ _id: data['_id'] }, { $set: { bambeuros: parseInt(data.bambeuros) + amount } }).catch((err) => {
+              console.log(err)
+            }).then(
+              db.collection('users').updateOne({ _id: id }, { $set: { bambeuros: parseInt(req.session.bambeuros) - amount } }).catch((err) => {
+                console.log(err)
+              }).then(
+                console.log('Transfer Successful')
+              )
+            )
+          }
+          client.close()
+        }
+      })
+    }
+  })
 })
 
 app.post('/createAccount', (req, res) => {
@@ -102,7 +145,7 @@ app.post('/signIn', (req, res) => {
             if (crypto.SHA512(salt + hash).toString() === data.hash) {
               console.log('SIGNED IN')
               req.session.signedIn = true
-              req.session.id = data['_id']
+              req.session.userid = data['_id']
               req.session.username = data.username
               res.send('signed In')
             } else {
