@@ -15,7 +15,7 @@
     "http-errors": "~1.6.3",
     "mongodb": "^3.3.0-beta2",
     "morgan": "~1.9.1",
-    "pug": "^2.0.4",
+    "pug": "^3.0.1",
     "random-bytes": "^1.0.0"
   }
 }
